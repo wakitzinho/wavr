@@ -1,0 +1,28 @@
+{
+  "name": "wavr",
+  "version": "1.0.0",
+  "description": "Local music player",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --linux AppImage"
+  },
+  "build": {
+    "appId": "com.wavr.app",
+    "productName": "Wavr",
+    "directories": { "output": "dist" },
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Audio",
+      "icon": "assets/icon.png"
+    },
+    "files": ["src/**/*", "assets/**/*", "package.json"]
+  },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "music-metadata": "^7.14.0"
+  }
+}
