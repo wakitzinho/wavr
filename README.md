@@ -58,7 +58,7 @@ sudo apt install nodejs npm
 
 ```bash
 tar -xzf wavr-wavr.tar.gz
-cd wavr
+cd wavr-wavr
 ```
 
 ### 2. Build the AppImage
