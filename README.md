@@ -57,7 +57,7 @@ sudo apt install nodejs npm
 ### 1. Extract the source
 
 ```bash
-tar -xzf wavr-source.tar.gz
+tar -xzf wavr-wavr.tar.gz
 cd wavr
 ```
 
