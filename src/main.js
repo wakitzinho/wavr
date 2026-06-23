@@ -210,7 +210,43 @@ app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(
 
 // ── IPC HANDLERS ─────────────────────────────────────────────────────────────
 
-ipcMain.handle('get-library', () => readJSON(DB_FILE, []));
+function hasLyricsFile(song) {
+  const audioPath = song.file;
+  if (!audioPath) return false;
+  const dir = path.dirname(audioPath);
+
+  // Strategy 1: .lrc with same filename as audio (UUID-based)
+  const lrcByUuid = audioPath.slice(0, audioPath.lastIndexOf('.')) + '.lrc';
+  if (fs.existsSync(lrcByUuid)) return true;
+
+  // Strategy 2: .lrc matching the song's display name
+  const lrcByName = path.join(dir, song.name + '.lrc');
+  if (fs.existsSync(lrcByName)) return true;
+
+  // Strategy 3: case-insensitive scan of directory for matching .lrc
+  try {
+    const nameLower = song.name.toLowerCase();
+    const files = fs.readdirSync(dir);
+    for (const f of files) {
+      if (f.toLowerCase().endsWith('.lrc')) {
+        const stem = f.slice(0, f.length - 4).toLowerCase();
+        if (stem === nameLower) {
+          return true;
+        }
+      }
+    }
+  } catch { }
+
+  return false;
+}
+
+ipcMain.handle('get-library', () => {
+  const library = readJSON(DB_FILE, []);
+  return library.map(song => ({
+    ...song,
+    hasLyrics: hasLyricsFile(song)
+  }));
+});
 ipcMain.handle('get-playlists', () => readJSON(PLAYLISTS_FILE, []));
 ipcMain.handle('get-playlog', () => readJSON(PLAYLOG_FILE, []));
 

@@ -1,15 +1,21 @@
 'use strict';
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
-const S = {
-  songs: [], playlists: [], playlog: [], favourites: new Set(),
-  queue: [], queueIdx: -1, currentId: null,
-  playing: false, shuffle: false, repeat: 'none',
-  volume: 0.8, page: 'home', activePl: null, statsRange: 'week',
-  pendingAddSongId: null, editingPlId: null, coverDataUrl: null,
-  lyrics: [], lyricsVisible: false,
-  selectMode: false, selected: new Set(),
-};
+  const S = {
+    songs: [], playlists: [], playlog: [], favourites: new Set(),
+    queue: [], queueIdx: -1, currentId: null,
+    playing: false, shuffle: false, repeat: 'none',
+    volume: 0.8, page: 'home', activePl: null, statsRange: 'week',
+    pendingAddSongId: null, editingPlId: null, coverDataUrl: null,
+    lyrics: [], lyricsVisible: false,
+    selectMode: false, selected: new Set(),
+    // Sorting and filtering state for library view
+    sortType: 'none', // 'none', 'alphabetical-asc', 'alphabetical-desc', 'added-asc', 'added-desc'
+    filterNotInPlaylist: false,
+    filterInPlaylist: false,
+    filterHasLyrics: false,
+    filterNoLyrics: false,
+  };;
 
 const audio = document.getElementById('audio');
 let notifTimer = null;
@@ -270,23 +276,180 @@ function renderLibrary() {
     </div>
     <div class="toolbar">
       <input class="search-input" id="lib-search" placeholder="Search songs…">
+      <div class="sort-btn-wrap">
+        <button class="btn btn-ghost" id="sort-btn" title="Sort / Filter"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+        <div id="sort-menu" class="sort-menu" style="display:none"></div>
+      </div>
     </div>
     <div class="song-list" id="song-list">
-      ${S.songs.length ? songRows(S.songs, 'library') : emptyState('No songs yet', 'Click "Add songs" to import your music')}
-    </div>
+      ${S.songs.length ? songRows(getFilteredAndSortedSongs(), 'library') : emptyState('No songs yet', 'Click "Add songs" to import your music')}
     </div>`;
+  // Bind events
   if (!S.selectMode && document.getElementById('hdr-add')) document.getElementById('hdr-add').onclick = openAddSongs;
   document.getElementById('hdr-select').onclick = () => { S.selectMode = !S.selectMode; S.selected.clear(); renderLibrary(); };
   if (document.getElementById('hdr-cancel-select')) document.getElementById('hdr-cancel-select').onclick = () => { S.selectMode = false; S.selected.clear(); renderLibrary(); };
-  document.getElementById('lib-search').oninput = e => {
-    const q = e.target.value.toLowerCase();
-    const filtered = S.songs.filter(s =>
-      s.name.toLowerCase().includes(q) || (s.artist || '').toLowerCase().includes(q));
-    document.getElementById('song-list').innerHTML = songRows(filtered, 'library');
-    bindSongRows();
-  };
+  document.getElementById('lib-search').oninput = e => { updateLibraryList(true); };
+  document.getElementById('sort-btn').onclick = e => { e.stopPropagation(); toggleSortMenu(); };
+  // Close sort menu on outside click (use a named function so we don't stack listeners)
+  if (!renderLibrary._boundOutsideClick) {
+    renderLibrary._boundOutsideClick = e => {
+      const menu = document.getElementById('sort-menu');
+      if (menu && menu.style.display !== 'none' && !e.target.closest('#sort-btn') && !e.target.closest('#sort-menu')) hideSortMenu();
+    };
+    document.addEventListener('click', renderLibrary._boundOutsideClick);
+  }
   bindSongRows();
   if (S.selectMode) updateSelectionUI();
+}
+
+function getFilteredAndSortedSongs() {
+  let list = S.songs.slice();
+  // Apply search filter if there is a query
+  const searchEl = document.getElementById('lib-search');
+  const query = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  if (query) {
+    list = list.filter(s => s.name.toLowerCase().includes(query) || (s.artist || '').toLowerCase().includes(query));
+  }
+  // Playlist filters (mutually exclusive)
+  if (S.filterInPlaylist && !S.filterNotInPlaylist) {
+    list = list.filter(s => S.playlists.some(pl => (pl.songs || []).includes(s.id)));
+  } else if (S.filterNotInPlaylist && !S.filterInPlaylist) {
+    list = list.filter(s => !S.playlists.some(pl => (pl.songs || []).includes(s.id)));
+  }
+  // Lyrics filters (mutually exclusive)
+  if (S.filterHasLyrics && !S.filterNoLyrics) {
+    list = list.filter(s => s.hasLyrics);
+  } else if (S.filterNoLyrics && !S.filterHasLyrics) {
+    list = list.filter(s => !s.hasLyrics);
+  }
+  // Sorting
+  switch (S.sortType) {
+    case 'alphabetical-asc':
+      list.sort((a, b) => a.name.localeCompare(b.name));
+      break;
+    case 'alphabetical-desc':
+      list.sort((a, b) => b.name.localeCompare(a.name));
+      break;
+    case 'added-asc':
+      list.sort((a, b) => (a.addedAt || 0) - (b.addedAt || 0));
+      break;
+    case 'added-desc':
+      list.sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0));
+      break;
+    default:
+      // no sorting
+  }
+  return list;
+}
+
+function updateLibraryList(animate) {
+  const listEl = document.getElementById('song-list');
+  if (!listEl) return;
+  const newHtml = songRows(getFilteredAndSortedSongs(), 'library');
+  if (animate) {
+    listEl.classList.add('fade-out');
+    setTimeout(() => {
+      listEl.innerHTML = newHtml;
+      listEl.classList.remove('fade-out');
+      bindSongRows();
+    }, 1000);
+  } else {
+    listEl.innerHTML = newHtml;
+    bindSongRows();
+  }
+}
+
+function toggleSortMenu() {
+  const menu = document.getElementById('sort-menu');
+  if (!menu) return;
+  if (menu.style.display === 'none' || menu.style.display === '') {
+    renderSortMenu();
+    menu.style.display = 'block';
+    menu.style.opacity = '0';
+    requestAnimationFrame(() => {
+      menu.style.opacity = '1';
+    });
+  } else {
+    menu.style.opacity = '0';
+    setTimeout(() => {
+      menu.style.display = 'none';
+    }, 500);
+  }
+}
+
+function hideSortMenu() {
+  const menu = document.getElementById('sort-menu');
+  if (menu) {
+    menu.style.opacity = '0';
+    setTimeout(() => {
+      menu.style.display = 'none';
+    }, 500);
+  }
+}
+
+function renderSortMenu() {
+  const hasTimeAdded = S.songs.some(s => s.addedAt);
+  const menu = document.getElementById('sort-menu');
+  if (!menu) return;
+
+  // Sort label cycling: none → asc → desc
+  const alphaLabel = S.sortType === 'alphabetical-asc' ? 'Alphabetical A‑Z'
+                   : S.sortType === 'alphabetical-desc' ? 'Alphabetical Z‑A'
+                   : 'Alphabetical';
+  const alphaActive = S.sortType === 'alphabetical-asc' || S.sortType === 'alphabetical-desc';
+
+  const addedLabel = !hasTimeAdded ? '' :
+                     S.sortType === 'added-desc' ? 'Time Added ↓ Newest'
+                   : S.sortType === 'added-asc'  ? 'Time Added ↑ Oldest'
+                   : 'Time Added';
+  const addedActive = S.sortType === 'added-desc' || S.sortType === 'added-asc';
+
+  // Filter label cycling: off → on
+  const playlistLabel = S.filterNotInPlaylist ? 'Playlist  ✕ Not in'
+                      : S.filterInPlaylist    ? 'Playlist  ✓ In'
+                      : 'Playlist';
+  const playlistActive = S.filterNotInPlaylist || S.filterInPlaylist;
+
+  const lyricsLabel = S.filterHasLyrics ? 'Lyrics  ✓ Has'
+                    : S.filterNoLyrics  ? 'Lyrics  ✕ None'
+                    : 'Lyrics';
+  const lyricsActive = S.filterHasLyrics || S.filterNoLyrics;
+
+  menu.innerHTML = `
+    <div class="menu-section-title">Sort</div>
+    <div class="sort-menu-item${alphaActive ? ' active' : ''}" data-action="cycleAlpha">${alphaLabel}</div>
+    ${hasTimeAdded ? `<div class="sort-menu-item${addedActive ? ' active' : ''}" data-action="cycleAdded">${addedLabel}</div>` : ''}
+    <div class="menu-divider"></div>
+    <div class="menu-section-title">Filter</div>
+    <div class="sort-menu-item${playlistActive ? ' active' : ''}" data-action="cyclePlaylist">${playlistLabel}</div>
+    <div class="sort-menu-item${lyricsActive ? ' active' : ''}" data-action="cycleLyrics">${lyricsLabel}</div>
+  `;
+
+  menu.querySelectorAll('.sort-menu-item').forEach(item => {
+    item.onclick = e => {
+      e.stopPropagation();
+      const action = item.dataset.action;
+      if (action === 'cycleAlpha') {
+        if (S.sortType === 'none' || (S.sortType !== 'alphabetical-asc' && S.sortType !== 'alphabetical-desc')) S.sortType = 'alphabetical-asc';
+        else if (S.sortType === 'alphabetical-asc') S.sortType = 'alphabetical-desc';
+        else S.sortType = 'none';
+      } else if (action === 'cycleAdded') {
+        if (S.sortType === 'none' || (S.sortType !== 'added-desc' && S.sortType !== 'added-asc')) S.sortType = 'added-desc';
+        else if (S.sortType === 'added-desc') S.sortType = 'added-asc';
+        else S.sortType = 'none';
+      } else if (action === 'cyclePlaylist') {
+        if (!S.filterNotInPlaylist && !S.filterInPlaylist) { S.filterNotInPlaylist = true; S.filterInPlaylist = false; }
+        else if (S.filterNotInPlaylist) { S.filterNotInPlaylist = false; S.filterInPlaylist = true; }
+        else { S.filterInPlaylist = false; }
+      } else if (action === 'cycleLyrics') {
+        if (!S.filterHasLyrics && !S.filterNoLyrics) { S.filterHasLyrics = true; S.filterNoLyrics = false; }
+        else if (S.filterHasLyrics) { S.filterHasLyrics = false; S.filterNoLyrics = true; }
+        else { S.filterNoLyrics = false; }
+      }
+      updateLibraryList(true);
+      renderSortMenu();
+    };
+  });
 }
 
 function songRows(songs, ctx, plId = null) {

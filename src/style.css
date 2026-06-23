@@ -107,9 +107,15 @@ input { font-family: var(--font); }
 /* ── TOOLBAR ── */
 .toolbar { padding: 0 26px; display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
 .search-input {
-  flex: 1; background: var(--bg3); border: 1px solid var(--border2);
-  border-radius: var(--r); padding: 7px 12px;
-  color: var(--text); font-size: 13px; outline: none;
+  flex: 1;
+  max-width: 240px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 7px 12px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
   transition: border .15s;
 }
 .search-input:focus { border-color: var(--accent); }
@@ -678,3 +684,64 @@ input { font-family: var(--font); }
 }
 .color-picker-hex:focus { border-color: var(--accent); }
 
+
+/* ── SORT MENU ── */
+.sort-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  padding: 6px 0;
+  z-index: 100;
+  min-width: 200px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.35);
+  animation: sortMenuIn .12s ease-out;
+}
+@keyframes sortMenuIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sort-menu-item {
+  padding: 7px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--text2);
+  transition: background .1s;
+}
+.sort-menu-item:hover {
+  background: var(--bg3);
+  color: var(--text);
+}
+.sort-menu-item.active {
+  color: var(--accent);
+}
+.menu-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  padding: 6px 14px 4px;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 6px 0;
+}
+.fade-out {
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+.sort-btn-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+#sort-btn {
+  padding: 7px 10px;
+  flex-shrink: 0;
+}
