@@ -347,12 +347,18 @@ function updateLibraryList(animate) {
   if (!listEl) return;
   const newHtml = songRows(getFilteredAndSortedSongs(), 'library');
   if (animate) {
+    listEl.classList.remove('fade-in');
     listEl.classList.add('fade-out');
     setTimeout(() => {
       listEl.innerHTML = newHtml;
       listEl.classList.remove('fade-out');
-      bindSongRows();
-    }, 1000);
+      listEl.style.opacity = '0';
+      listEl.classList.add('fade-in');
+      requestAnimationFrame(() => {
+        listEl.style.opacity = '';
+        bindSongRows();
+      });
+    }, 500);
   } else {
     listEl.innerHTML = newHtml;
     bindSongRows();

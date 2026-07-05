@@ -737,6 +737,10 @@ input { font-family: var(--font); }
   opacity: 0;
   transition: opacity 0.5s;
 }
+.fade-in {
+  opacity: 1;
+  transition: opacity 0.5s;
+}
 .sort-btn-wrap {
   position: relative;
   flex-shrink: 0;
