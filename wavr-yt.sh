@@ -49,6 +49,7 @@ echo ""
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
+YTDLP_EXIT=0
 yt-dlp \
   --extract-audio \
   --audio-format mp3 \
@@ -63,7 +64,11 @@ yt-dlp \
   --ignore-errors \
   --no-warnings \
   --progress \
-  "$@"
+  "$@" || YTDLP_EXIT=$?
+
+if [[ $YTDLP_EXIT -ne 0 ]]; then
+  echo -e "${DIM}(some videos in the batch/playlist were unavailable or failed — continuing with what downloaded)${RESET}"
+fi
 
 # ── move to Wavr dir ──────────────────────────────────────────────────────────
 MOVED=0
