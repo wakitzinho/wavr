@@ -5,6 +5,8 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
+    "build:linux": "electron-builder --linux AppImage",
+    "build:win": "electron-builder --win",
     "build": "electron-builder --linux AppImage"
   },
   "build": {
@@ -15,6 +17,10 @@
       "target": ["AppImage"],
       "category": "Audio",
       "icon": "assets/icon.png"
+    },
+    "win": {
+      "target": ["nsis", "portable"],
+      "icon": "assets/icon.ico"
     },
     "files": ["src/**/*", "assets/**/*", "package.json"]
   },
