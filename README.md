@@ -54,19 +54,6 @@ chmod +x dist/Wavr-1.0.0.AppImage
 
 ---
 
-## Running in dev mode
-
-If you want to run without building an AppImage first:
-
-```bash
-chmod +x run-dev.sh
-./run-dev.sh
-```
-
-This opens the app directly via Electron with a normal window. Useful for testing changes.
-
----
-
 ## YouTube downloader
 
 Wavr includes a companion script called `wavr-yt` that downloads audio from YouTube and puts it straight into your music folder.
@@ -75,16 +62,6 @@ Wavr includes a companion script called `wavr-yt` that downloads audio from YouT
 
 ```bash
 sudo pacman -S yt-dlp ffmpeg
-```
-
-On other distros:
-
-```bash
-# Fedora
-sudo dnf install yt-dlp ffmpeg
-
-# Ubuntu/Debian
-sudo apt install yt-dlp ffmpeg
 ```
 
 ### Install the script
