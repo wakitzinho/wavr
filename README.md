@@ -1,3 +1,5 @@
+# Abandoned vibecoded electronslop
+
 # Wavr
 
 A minimal local music player built with Electron. No accounts, no cloud, no tracking. Your music stays on your machine.
