@@ -219,16 +219,3 @@ Remove-Item -Recurse -Force "$env:APPDATA\wavr"
 # Optional: remove music
 Remove-Item -Recurse -Force "$env:USERPROFILE\Music\Wavr"
 ```
-
----
-
-## Windows-specific notes
-
-Things to verify if testing on an actual Windows machine:
-
-- **Title bar overlay** — The hidden title bar + overlay (`titleBarOverlay` in `src/main.js`) works on Windows 10/11, but the 36px height may need adjustment for Windows caption buttons (they're typically taller than on Linux). If buttons look cramped or overlap content, increase `height` in the `titleBarOverlay` config.
-- **Window shadow** — Frameless windows on Windows don't get the native drop shadow. This is cosmetic — the window will still work fine.
-- **File dialog** — `dialog.showOpenDialog` is cross-platform, but the native dialog look differs. Functionality is identical.
-- **fs.watch** — On Windows, `fs.watch` uses `ReadDirectoryChangesW` which is more reliable than on Linux, so folder watching should actually work better.
-- **Keyboard shortcuts** — `Alt+Left`/`Alt+Right` may conflict with browser-like back/forward in some Windows contexts. Test and change to `Ctrl+Left`/`Ctrl+Right` if needed.
-- **System tray** — Wavr doesn't use a tray icon, so no Windows tray concerns.
