@@ -27,28 +27,7 @@ A minimal local music player built with Electron. No accounts, no cloud, no trac
 - Node.js 18 or later
 - npm
 
-### Linux
 
-Arch/EndeavourOS/Manjaro:
-```bash
-sudo pacman -S nodejs npm
-```
-
-Fedora:
-```bash
-sudo dnf install nodejs npm
-```
-
-Ubuntu/Debian:
-```bash
-sudo apt install nodejs npm
-```
-
-### Windows
-
-Download and install Node.js from https://nodejs.org (LTS recommended). npm is included.
-
----
 
 ## Installation
 
