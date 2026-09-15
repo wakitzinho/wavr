@@ -97,16 +97,6 @@ Run the installer (`Wavr Setup 1.0.0.exe`) to install Wavr like a normal Windows
 
 ---
 
-## Running in dev mode
-
-```bash
-npm start
-```
-
-This opens the app directly via Electron without building. Useful for testing.
-
----
-
 ## YouTube downloader
 
 Wavr includes a companion script called `wavr-yt` that downloads audio from YouTube straight into your music folder.
