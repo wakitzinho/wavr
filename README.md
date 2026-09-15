@@ -27,13 +27,6 @@ A minimal local music player built with Electron. No accounts, no cloud, no trac
 - Node.js 18 or later
 - npm
 
-Check if you have them:
-
-```bash
-node --version
-npm --version
-```
-
 ### Linux
 
 Arch/EndeavourOS/Manjaro:
